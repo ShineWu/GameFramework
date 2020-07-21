@@ -18,7 +18,7 @@ namespace GameFramework.FileSystem
     internal sealed partial class FileSystem : IFileSystem
     {
         private const int ClusterSize = 1024 * 4;
-        private const int CachedBytesLength = 1024;
+        private const int CachedBytesLength = 0x1000;
 
         private static readonly string[] EmptyStringArray = new string[] { };
         private static readonly byte[] s_CachedBytes = new byte[CachedBytesLength];
@@ -404,6 +404,11 @@ namespace GameFramework.FileSystem
             }
 
             m_Stream.Position = fileInfo.Offset;
+            if (length > fileInfo.Length)
+            {
+                length = fileInfo.Length;
+            }
+
             return m_Stream.Read(buffer, startIndex, length);
         }
 
