@@ -43,6 +43,7 @@ namespace GameFramework.Resource
         private ResourceIniter m_ResourceIniter;
         private VersionListProcessor m_VersionListProcessor;
         private ResourceChecker m_ResourceChecker;
+        private ResourceChecker m_UpdatableChecker;     /// ChangeBy: Shine Wu 2020/07/21 更新模式初始化资源
         private ResourceUpdater m_ResourceUpdater;
         private ResourceLoader m_ResourceLoader;
         private IResourceHelper m_ResourceHelper;
@@ -992,6 +993,52 @@ namespace GameFramework.Resource
             m_ResourceIniter.InitResources(m_CurrentVariant);
         }
 
+        /// ChangeBy: Shine Wu 2018/07/21
+        /// <summary>
+        /// 使用可更新模式并初始化资源。
+        /// </summary>
+        /// <param name="initResourcesCompleteCallback">使用可更新模式并初始化资源完成的回调函数。</param>
+        public void InitUpdatable(InitResourcesCompleteCallback initResourcesCompleteCallback)
+        {
+            if (initResourcesCompleteCallback == null)
+            {
+                throw new GameFrameworkException("Init resources complete callback is invalid.");
+            }
+
+            if (m_ResourceMode == ResourceMode.Unspecified)
+            {
+                throw new GameFrameworkException("You must set resource mode first.");
+            }
+
+            if (m_ResourceMode != ResourceMode.Updatable)
+            {
+                throw new GameFrameworkException("You can not use InitUpdatable without updatable resource mode.");
+            }
+
+            if (m_UpdatableChecker != null)
+            {
+                throw new GameFrameworkException("You can not use InitUpdatable at this time.");
+            }
+
+            m_UpdatableChecker = new ResourceChecker(this);
+            m_UpdatableChecker.ResourceCheckComplete += OnInitUpdatableCheckComplete;
+
+            m_RefuseSetCurrentVariant = true;
+            m_InitResourcesCompleteCallback = initResourcesCompleteCallback;
+            m_UpdatableChecker.CheckResources(m_CurrentVariant, true);
+        }
+
+        /// ChangeBy: Shine Wu 2018/07/21
+        private void OnInitUpdatableCheckComplete(int movedCount, int removedCount, int updateCount, long updateTotalLength, long updateTotalZipLength)
+        {
+            m_UpdatableChecker.ResourceCheckComplete -= OnInitUpdatableCheckComplete;
+            m_UpdatableChecker.Shutdown();
+            m_UpdatableChecker = null;
+
+            m_InitResourcesCompleteCallback();
+            m_InitResourcesCompleteCallback = null;
+        }
+
         /// <summary>
         /// 使用可更新模式并检查版本资源列表。
         /// </summary>
@@ -1077,6 +1124,11 @@ namespace GameFramework.Resource
             {
                 throw new GameFrameworkException("You can not use CheckResources at this time.");
             }
+
+            // ChangeBy: Shine Wu 2020/07/21 清除资源记录
+            m_AssetInfos.Clear();
+            m_ResourceInfos.Clear();
+            m_ReadWriteResourceInfos.Clear();
 
             m_RefuseSetCurrentVariant = true;
             m_CheckResourcesCompleteCallback = checkResourcesCompleteCallback;

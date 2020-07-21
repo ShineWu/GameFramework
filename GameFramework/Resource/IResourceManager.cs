@@ -405,6 +405,13 @@ namespace GameFramework.Resource
         /// <param name="initResourcesCompleteCallback">使用单机模式并初始化资源完成时的回调函数。</param>
         void InitResources(InitResourcesCompleteCallback initResourcesCompleteCallback);
 
+        /// ChangeBy: Shine Wu 2020/07/21
+        /// <summary>
+        /// 使用可更新模式并初始化资源。
+        /// </summary>
+        /// <param name="initResourcesCompleteCallback">使用可更新模式并初始化资源完成的回调函数。</param>
+        void InitUpdatable(InitResourcesCompleteCallback initResourcesCompleteCallback);
+
         /// <summary>
         /// 使用可更新模式并检查版本资源列表。
         /// </summary>
